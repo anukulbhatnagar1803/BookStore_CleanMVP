@@ -10,7 +10,7 @@ import Foundation
 
 protocol  CreateBookUseCaseProtocol {
     
-    func createBook(domainEntity: BookDomainEntity)
+    func createBook(domainEntity: BookDomainEntity, completion: @escaping (Bool, Error?) -> Void)
 }
 
 struct CreateBookUseCase: CreateBookUseCaseProtocol {
@@ -21,8 +21,18 @@ struct CreateBookUseCase: CreateBookUseCaseProtocol {
         self.bookRepository = bookRepo
     }
     
+    func createBook(domainEntity: BookDomainEntity,
+                    completion: @escaping (Bool, Error?) -> Void) {
+        
+        bookRepository.createBook(entity: domainEntity)
+        {   (isBookCreated, error) in
+            completion(isBookCreated, error)
+        }
+    }
+    
+    
     func createBook(domainEntity: BookDomainEntity) {
-         bookRepository.createBook(entity: domainEntity)
+        
     }
     
 }

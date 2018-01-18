@@ -73,6 +73,24 @@ class DBService {
     }
     
     
+    func fetchOrCreateEntity<T: NSManagedObject>(entity: T.Type,
+                                                 predicate: NSPredicate,
+                                                 onContext: NSManagedObjectContext) -> T? {
+        
+        let objectArray = self.fetchEntities(entity: entity, onContext: onContext, predicate: predicate)
+        
+        if objectArray.count == 1 {
+            return objectArray.first
+        }
+        
+        if objectArray.count > 1 {
+            return nil
+        }
+        
+        return createEntity(entity: entity, onContext: onContext)
+    }
+    
+    
     func fetchEntities<T: NSManagedObject>(entity: T.Type,
                                            onContext: NSManagedObjectContext,
                                            predicate: NSPredicate? = nil,

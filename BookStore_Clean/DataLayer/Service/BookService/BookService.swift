@@ -11,7 +11,7 @@ import CoreData
 
 protocol BookServiceProtocol {
     func fetchCompleteBookList() -> [Book]
-    func createBook(bookName: String, bookID: String)
+    func createBook(bookName: String, bookID: String, completion: @escaping (Bool, Error?) -> Void)
     func fetchBook(at indexPath: IndexPath) -> Book
     func initializeBookList()
     func bookListCount() -> Int
@@ -45,13 +45,31 @@ class BookService: NSObject,BookServiceProtocol {
                                        onContext: dbService.mainContext)
     }
     
-    
-    func createBook(bookName: String, bookID: String) {
+    func createBook(bookName: String,
+                    bookID: String,
+                    completion: @escaping (Bool, Error?) -> Void) {
+        
+        let predicate = NSPredicate(format: "bookID == %@", bookID)
+        
+        let bookArray = dbService.fetchEntities(entity: Book.self,
+                                           onContext: dbService.mainContext,
+                                           predicate: predicate)
+        
+        guard bookArray.count == 0 else {
+            completion(false, NSError())
+            return
+        }
         
         let book = dbService.createEntity(entity: Book.self, onContext: dbService.mainContext)
         book?.bookName = bookName
         book?.bookID = bookID
-        dbService.saveContext()
+        
+        do {
+            try dbService.mainContext.save()
+            completion(true, nil)
+        } catch {
+            completion(false, error)
+        }
     }
     
     func initializeBookList() {
@@ -66,7 +84,6 @@ class BookService: NSObject,BookServiceProtocol {
         if self.bookFetchResultController.fetchedObjects == nil {
             initializeBookList()
         }
-        
         return self.bookFetchResultController.fetchedObjects?.count ?? 0
     }
     
@@ -82,7 +99,11 @@ extension BookService: NSFetchedResultsControllerDelegate {
     }
     
     
-    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>,
+                    didChange anObject: Any,
+                    at indexPath: IndexPath?,
+                    for type: NSFetchedResultsChangeType,
+                    newIndexPath: IndexPath?) {
         
     }
     

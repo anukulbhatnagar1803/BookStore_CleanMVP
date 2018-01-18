@@ -8,8 +8,6 @@
 
 import UIKit
 
-
-
 class CreateBookViewController: UIViewController {
     
     var createBookPresenter: CreateBookPresenterProtocol!
@@ -25,14 +23,38 @@ class CreateBookViewController: UIViewController {
     }
     
     @IBAction func createBookAction(_ sender: Any) {
-    
+        
         guard let bookName = nameTextField.text, let bookID = bookIDTextField.text else {
             return
         }
         
         let bookPresentationEntity = BookPresentationEntity(name: bookName, id: bookID)
-        createBookPresenter.createBook(entity: bookPresentationEntity)
-        self.navigationController?.popViewController(animated: true)
+        
+        createBookPresenter.createBook(entity: bookPresentationEntity) { [weak self] (isBookCreated, error) in
+            self?.showAlert(error: error)
+        }
+    }
+    
+    // MARK: Show Alert
+    func showAlert(error: Error?) {
+        var title = "Success"
+        var message = "Successfully created new book"
+        if error != nil {
+            title = "Error"
+            message = "Error While creating new book"
+        }
+        
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "OK",
+                                     style: .default)
+        {   [weak self] (action) in
+            //TODO : Call on Main Thread
+            self?.navigationController?.popViewController(animated: true)
+        }
+        
+        alert.addAction(okAction)
+        //TODO : Call on Main Thread
+        self.present(alert, animated: true, completion: nil)
     }
 }
 

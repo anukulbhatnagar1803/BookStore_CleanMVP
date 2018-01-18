@@ -9,7 +9,8 @@
 import Foundation
 
 protocol CreateBookPresenterProtocol {
-    func createBook(entity: BookPresentationEntity)
+    func createBook(entity: BookPresentationEntity,
+                    completion: @escaping (Bool, Error?) -> Void)
 }
 
 
@@ -26,9 +27,12 @@ class CreateBookPresenter: CreateBookPresenterProtocol {
         self.createBookUseCase = useCase
     }
     
-    func createBook(entity: BookPresentationEntity) {
+    func createBook(entity: BookPresentationEntity,
+                    completion: @escaping (Bool, Error?) -> Void) {
         let bookDomainEntity = BookDomainEntity(name: entity.name, id: entity.id)
         createBookUseCase.createBook(domainEntity: bookDomainEntity)
+        {   (isBookCreated, error) in
+            completion(isBookCreated, error)
+        }
     }
-    
 }

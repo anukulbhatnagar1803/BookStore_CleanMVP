@@ -10,7 +10,7 @@ import Foundation
 
 protocol BookRepositoryProtocol {
     func fetchCompleteBookList() -> [BookDomainEntity]
-    func createBook(entity: BookDomainEntity)
+    func createBook(entity: BookDomainEntity, completion: @escaping (Bool, Error?) -> Void)
     func fetchBook(at indexPath: IndexPath) -> BookDomainEntity
     func initializeBookList()
     func bookListCount() -> Int
@@ -35,8 +35,16 @@ struct BookRepository: BookRepositoryProtocol {
         return bookDomainList
     }
     
+    func createBook(entity: BookDomainEntity, completion: @escaping (Bool, Error?) -> Void) {
+        bookService.createBook(bookName: entity.name,
+                               bookID: entity.id)
+        {   (isBookCreated, error) in
+            completion(isBookCreated, error)
+        }
+    }
+    
     func createBook(entity: BookDomainEntity) {
-        bookService.createBook(bookName: entity.name, bookID: entity.id)
+        
     }
     
     func fetchBook(at indexPath: IndexPath) -> BookDomainEntity {
