@@ -102,4 +102,24 @@ class DBService {
         return fetchRequest
     }
     
+    func createFetchResultController<T: NSManagedObject>(entity: T.Type,
+                                                         predicate: NSPredicate? = nil,
+                                                         delegate: NSFetchedResultsControllerDelegate,
+                                                         sortDescriptors: [NSSortDescriptor],
+                                                         onContext: NSManagedObjectContext) -> NSFetchedResultsController<T> {
+        
+        let fetchRequest = createFetchRequest(entity: entity,
+                                              predicate: predicate,
+                                              sortDescriptors: sortDescriptors)
+        
+        let fetchResultController = NSFetchedResultsController<T>(fetchRequest: fetchRequest,
+                                                                  managedObjectContext: onContext,
+                                                                  sectionNameKeyPath: nil,
+                                                                  cacheName: nil)
+        fetchResultController.delegate = delegate
+        return fetchResultController
+        
+    }
+    
+    
 }

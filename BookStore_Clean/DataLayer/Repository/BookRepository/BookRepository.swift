@@ -11,6 +11,9 @@ import Foundation
 protocol BookRepositoryProtocol {
     func fetchCompleteBookList() -> [BookDomainEntity]
     func createBook(entity: BookDomainEntity)
+    func fetchBook(at indexPath: IndexPath) -> BookDomainEntity
+    func initializeBookList()
+    func bookListCount() -> Int
 }
 
 
@@ -34,6 +37,22 @@ struct BookRepository: BookRepositoryProtocol {
     
     func createBook(entity: BookDomainEntity) {
         bookService.createBook(bookName: entity.name, bookID: entity.id)
+    }
+    
+    func fetchBook(at indexPath: IndexPath) -> BookDomainEntity {
+        let bookModelEntity = bookService.fetchBook(at: indexPath)
+        //TODO: Need to fix the same
+        return BookDomainEntity(name: bookModelEntity.bookName ?? "",
+                                id: bookModelEntity.bookID ?? "")
+        
+    }
+    
+    func initializeBookList() {
+        bookService.initializeBookList()
+    }
+    
+    func bookListCount() -> Int {
+        return bookService.bookListCount()
     }
     
 }

@@ -7,16 +7,33 @@
 //
 
 import Foundation
-
+import CoreData
 
 protocol BookServiceProtocol {
     func fetchCompleteBookList() -> [Book]
     func createBook(bookName: String, bookID: String)
+    func fetchBook(at indexPath: IndexPath) -> Book
+    func initializeBookList()
+    func bookListCount() -> Int
 }
 
-struct BookService: BookServiceProtocol {
+class BookService: NSObject,BookServiceProtocol {
     
     private let dbService: DBService
+    
+    
+    private lazy var bookFetchResultController: NSFetchedResultsController<Book> = {
+        
+        let sortDescriptor = NSSortDescriptor(key: "bookName", ascending: true)
+        let fetchResultController = dbService.createFetchResultController(entity: Book.self,
+                                                                          predicate: nil,
+                                                                          delegate: self,
+                                                                          sortDescriptors: [sortDescriptor],
+                                                                          onContext: dbService.mainContext)
+        
+        return fetchResultController
+        
+    }()
     
     init(service: DBService) {
         self.dbService = service
@@ -34,8 +51,43 @@ struct BookService: BookServiceProtocol {
         let book = dbService.createEntity(entity: Book.self, onContext: dbService.mainContext)
         book?.bookName = bookName
         book?.bookID = bookID
-        //Changes New Changes
         dbService.saveContext()
     }
     
+    func initializeBookList() {
+        do {
+            try self.bookFetchResultController.performFetch()
+        } catch {
+            print("Error while initializing Book List")
+        }
+    }
+    
+    func bookListCount() -> Int {
+        if self.bookFetchResultController.fetchedObjects == nil {
+            initializeBookList()
+        }
+        
+        return self.bookFetchResultController.fetchedObjects?.count ?? 0
+    }
+    
+    func fetchBook(at indexPath: IndexPath) -> Book {
+        return bookFetchResultController.object(at: indexPath)
+    }
+}
+
+extension BookService: NSFetchedResultsControllerDelegate {
+    
+    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        
+    }
+    
+    
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+        
+    }
+    
+    
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        
+    }
 }

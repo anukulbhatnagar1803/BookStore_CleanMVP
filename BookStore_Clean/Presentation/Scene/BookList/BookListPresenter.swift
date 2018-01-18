@@ -10,6 +10,9 @@ import Foundation
 
 protocol BookListPresenterProtocol {
     func fetchCompleteBookList()
+    func fetchBook(at indexPath: IndexPath) -> BookPresentationEntity
+    func initializeBookList()
+    func bookListCount() -> Int
 }
 
 class BookListPresenter: BookListPresenterProtocol {
@@ -28,4 +31,15 @@ class BookListPresenter: BookListPresenterProtocol {
         viewController.displayBookList(bookList: bookList)
     }
     
+    func fetchBook(at indexPath: IndexPath) -> BookPresentationEntity {
+        return fetchBookListUseCase.fetchBook(at: indexPath)
+    }
+    
+    func initializeBookList() {
+        fetchBookListUseCase.initializeBookList()
+    }
+    
+    func bookListCount() -> Int {
+        return fetchBookListUseCase.bookListCount()
+    }
 }

@@ -11,6 +11,14 @@ import UIKit
 
 protocol  BookListDisplayProtocol {
     func displayBookList(bookList: [BookPresentationEntity])
+    
+    
+    func insertRow(indexPath: IndexPath)
+    func deleteRow(indexPath: IndexPath)
+    func updateRow(indexPath: IndexPath)
+    func beginUpdate()
+    func endUpdate()
+    func initializeBookList()
 }
 
 
@@ -23,11 +31,13 @@ class BookListViewController: UIViewController {
         super.viewDidLoad()
         //Configure BookList
         BookListConfigurator().configure(controller: self)
+        initializeBookList()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        bookListPresenter.fetchCompleteBookList()
+        //TODO: Need to remove this
+        bookListTableView.reloadData()
     }
 }
 
@@ -39,19 +49,40 @@ extension BookListViewController: UITableViewDataSource, UITableViewDelegate, Bo
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return bookList.count
+        return bookListPresenter.bookListCount()
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "BookCell", for: indexPath)
-        let book = bookList[indexPath.row]
+        let book = bookListPresenter.fetchBook(at: indexPath)
         cell.textLabel?.text = book.id
         cell.detailTextLabel?.text = book.name
         return cell
     }
     
+    func initializeBookList() {
+        bookListPresenter.initializeBookList()
+    }
     
+    func beginUpdate() {
+        bookListTableView.beginUpdates()
+    }
     
+    func insertRow(indexPath: IndexPath) {
+        bookListTableView.insertRows(at: [indexPath], with: .fade)
+    }
+    
+    func deleteRow(indexPath: IndexPath) {
+        bookListTableView.deleteRows(at: [indexPath], with: .fade)
+    }
+    
+    func updateRow(indexPath: IndexPath) {
+        bookListTableView.reloadRows(at: [indexPath], with: .fade)
+    }
+    
+    func endUpdate() {
+        bookListTableView.endUpdates()
+    }
 }
 
