@@ -3,7 +3,7 @@
 //  BookStore_Clean
 //
 //  Created by administrator on 1/11/18.
-//  Copyright © 2018 TCS. All rights reserved.
+//  Copyright © 2018 Admin. All rights reserved.
 //
 
 import UIKit

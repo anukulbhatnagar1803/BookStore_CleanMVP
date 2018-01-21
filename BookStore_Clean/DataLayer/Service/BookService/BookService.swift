@@ -3,7 +3,7 @@
 //  BookStore_Clean
 //
 //  Created by administrator on 1/11/18.
-//  Copyright © 2018 TCS. All rights reserved.
+//  Copyright © 2018 Admin. All rights reserved.
 //
 
 import Foundation
@@ -17,22 +17,19 @@ protocol BookServiceProtocol {
     func bookListCount() -> Int
 }
 
-class BookService: NSObject,BookServiceProtocol {
+class BookService: NSObject, BookServiceProtocol {
     
     private let dbService: DBService
     
     
     private lazy var bookFetchResultController: NSFetchedResultsController<Book> = {
-        
         let sortDescriptor = NSSortDescriptor(key: "bookName", ascending: true)
         let fetchResultController = dbService.createFetchResultController(entity: Book.self,
                                                                           predicate: nil,
                                                                           delegate: self,
                                                                           sortDescriptors: [sortDescriptor],
                                                                           onContext: dbService.mainContext)
-        
         return fetchResultController
-        
     }()
     
     init(service: DBService) {
@@ -50,7 +47,6 @@ class BookService: NSObject,BookServiceProtocol {
                     completion: @escaping (Bool, Error?) -> Void) {
         
         let predicate = NSPredicate(format: "bookID == %@", bookID)
-        
         let bookArray = dbService.fetchEntities(entity: Book.self,
                                            onContext: dbService.mainContext,
                                            predicate: predicate)
@@ -105,6 +101,20 @@ extension BookService: NSFetchedResultsControllerDelegate {
                     for type: NSFetchedResultsChangeType,
                     newIndexPath: IndexPath?) {
         
+        switch type {
+        case .insert:
+            print("Insert")
+            break
+        case .delete:
+            print("Delete")
+            break
+        case .update:
+            print("Update")
+            break
+        case .move:
+            print("Move")
+            break
+        }
     }
     
     
