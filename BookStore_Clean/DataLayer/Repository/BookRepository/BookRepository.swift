@@ -10,14 +10,24 @@
 import Foundation
 import CoreData
 
+typealias BookStoreCreateBookCompletionHandler = (BookModelResult<Book>) -> Void
+
 protocol BookRepositoryProtocol {
     func fetchCompleteBookList() -> [BookDomainEntity]
-    func createBook(entity: BookDomainEntity, completion: @escaping (Bool, Error?) -> Void)
+    func createBook(entity: BookDomainEntity, completion: @escaping BookStoreCreateBookCompletionHandler)
     func fetchBook(at indexPath: IndexPath) -> BookDomainEntity
     func initializeBookList()
     func bookListCount() -> Int
 }
 
+enum BookModelError {
+    case InsertFailure(String)
+}
+
+enum BookModelResult<T> {
+    case success(T)
+    case failure(BookModelError)
+}
 
 class BookRepository: NSObject, BookRepositoryProtocol {
     
@@ -26,6 +36,7 @@ class BookRepository: NSObject, BookRepositoryProtocol {
         self.dbService = service
     }
     
+    // MARK: FRC
     private lazy var bookFetchResultController: NSFetchedResultsController<Book> = {
         let sortDescriptor = NSSortDescriptor(key: "bookName", ascending: true)
         let fetchResultController = dbService.createFetchResultController(entity: Book.self,
@@ -36,7 +47,7 @@ class BookRepository: NSObject, BookRepositoryProtocol {
         return fetchResultController
     }()
     
-    
+    //MARK : Fetch Book List
     func fetchCompleteBookList() -> [BookDomainEntity] {
         let bookList = dbService.fetchEntities(entity: Book.self,
                                                onContext: dbService.mainContext)
@@ -48,7 +59,8 @@ class BookRepository: NSObject, BookRepositoryProtocol {
         return bookDomainList
     }
     
-    func createBook(entity: BookDomainEntity, completion: @escaping (Bool, Error?) -> Void) {
+    // MARK: Create New Book
+    func createBook(entity: BookDomainEntity, completion: @escaping BookStoreCreateBookCompletionHandler) {
         
         let predicate = NSPredicate(format: "bookID == %@", entity.id)
         let bookArray = dbService.fetchEntities(entity: Book.self,
@@ -56,7 +68,9 @@ class BookRepository: NSObject, BookRepositoryProtocol {
                                                 predicate: predicate)
         
         guard bookArray.count == 0 else {
-            completion(false, NSError())
+            
+            let error = BookModelError.InsertFailure("Book with following ID exist")
+            completion(BookModelResult.failure(error))
             return
         }
         
@@ -67,19 +81,14 @@ class BookRepository: NSObject, BookRepositoryProtocol {
         
         do {
             try dbService.mainContext.save()
-            completion(true, nil)
+            completion(BookModelResult.success(book!))
         } catch {
-            completion(false, error)
+            let error = BookModelError.InsertFailure(error.localizedDescription)
+            completion(BookModelResult.failure(error))
         }
     }
     
-    
-    func fetchBook(at indexPath: IndexPath) -> BookDomainEntity {
-        let object = bookFetchResultController.object(at: indexPath)
-        return BookDomainEntity(name: object.bookName ?? "",
-                                id: object.bookID ?? "")
-    }
-    
+    // MARK: Initialize Book List
     func initializeBookList() {
         do {
             try self.bookFetchResultController.performFetch()
@@ -88,6 +97,7 @@ class BookRepository: NSObject, BookRepositoryProtocol {
         }
     }
     
+    // MARK: Book List DataSource
     func bookListCount() -> Int {
         if self.bookFetchResultController.fetchedObjects == nil {
             initializeBookList()
@@ -95,15 +105,15 @@ class BookRepository: NSObject, BookRepositoryProtocol {
         return self.bookFetchResultController.fetchedObjects?.count ?? 0
     }
     
+    func fetchBook(at indexPath: IndexPath) -> BookDomainEntity {
+        let object = bookFetchResultController.object(at: indexPath)
+        return BookDomainEntity(name: object.bookName ?? "",
+                                id: object.bookID ?? "")
+    }
 }
 
 extension BookRepository: NSFetchedResultsControllerDelegate {
-    
-    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        
-    }
-    
-    
+   
     func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>,
                     didChange anObject: Any,
                     at indexPath: IndexPath?,
@@ -112,8 +122,6 @@ extension BookRepository: NSFetchedResultsControllerDelegate {
         
         switch type {
         case .insert:
-            //NotificationCenter.default.post(Notification(name: Notification.Name(rawValue: "BookListRefreshed")))
-            
             print("Insert")
             NotificationCenter.default.post(name: NSNotification.Name(rawValue: "BookListRefreshed"),
                                             object: newIndexPath)
@@ -128,11 +136,6 @@ extension BookRepository: NSFetchedResultsControllerDelegate {
             print("Move")
             break
         }
-    }
-    
-    
-    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        
     }
 }
 

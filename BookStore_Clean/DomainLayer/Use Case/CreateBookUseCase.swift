@@ -8,9 +8,11 @@
 
 import Foundation
 
+typealias BookUseCaseCreateBookCompletionHandler = (BookModelResult<BookDomainEntity>) -> Void
 protocol  CreateBookUseCaseProtocol {
     
-    func createBook(domainEntity: BookDomainEntity, completion: @escaping (Bool, Error?) -> Void)
+    func createBook(domainEntity: BookDomainEntity,
+                    completion: @escaping BookUseCaseCreateBookCompletionHandler)
 }
 
 struct CreateBookUseCase: CreateBookUseCaseProtocol {
@@ -22,11 +24,22 @@ struct CreateBookUseCase: CreateBookUseCaseProtocol {
     }
     
     func createBook(domainEntity: BookDomainEntity,
-                    completion: @escaping (Bool, Error?) -> Void) {
+                    completion: @escaping BookUseCaseCreateBookCompletionHandler) {
         
-        bookRepository.createBook(entity: domainEntity)
-        {   (isBookCreated, error) in
-            completion(isBookCreated, error)
+        bookRepository.createBook(entity: domainEntity) { (result) in
+            
+            switch result {
+            case let .success(bookModel):
+                let object = BookDomainEntity(name: bookModel.bookName ?? "",
+                                              id: bookModel.bookID ?? "")
+                completion(BookModelResult.success(object))
+                break
+                
+            case let .failure(error):
+                
+                completion(BookModelResult.failure(error))
+                break
+            }
         }
     }
     

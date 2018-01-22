@@ -8,9 +8,11 @@
 
 import Foundation
 
+
+
+
 protocol CreateBookPresenterProtocol {
-    func createBook(entity: BookPresentationEntity,
-                    completion: @escaping (Bool, Error?) -> Void)
+    func createBook(entity: BookPresentationEntity)
 }
 
 
@@ -27,12 +29,26 @@ class CreateBookPresenter: CreateBookPresenterProtocol {
         self.createBookUseCase = useCase
     }
     
-    func createBook(entity: BookPresentationEntity,
-                    completion: @escaping (Bool, Error?) -> Void) {
+    func createBook(entity: BookPresentationEntity) {
         let bookDomainEntity = BookDomainEntity(name: entity.name, id: entity.id)
-        createBookUseCase.createBook(domainEntity: bookDomainEntity)
-        {   (isBookCreated, error) in
-            completion(isBookCreated, error)
+        
+        createBookUseCase.createBook(domainEntity: bookDomainEntity) { [weak self] (result) in
+            switch result {
+            case let .success(bookDomainModel):
+                let object = BookPresentationEntity(name: bookDomainModel.name ,
+                                                    id: bookDomainModel.id)
+               
+                self?.viewController.bookCreationSuccess(viewEntity: object)
+                break
+                
+            case let .failure(error):
+                var errorString = ""
+                if case let BookModelError.InsertFailure(errorStr) = error {
+                    errorString = errorStr
+                }
+                self?.viewController.bookCreationFailure(errorString: errorString)
+                break
+            }
         }
     }
 }

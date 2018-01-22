@@ -8,7 +8,15 @@
 
 import UIKit
 
-class CreateBookViewController: UIViewController {
+protocol CreateBookProtocol {
+    
+    func bookCreationSuccess(viewEntity: BookPresentationEntity)
+    func bookCreationFailure(errorString: String)
+}
+
+
+
+class CreateBookViewController: UIViewController, CreateBookProtocol {
     
     var createBookPresenter: CreateBookPresenterProtocol!
     @IBOutlet weak var nameTextField: UITextField!
@@ -29,21 +37,43 @@ class CreateBookViewController: UIViewController {
         }
         
         let bookPresentationEntity = BookPresentationEntity(name: bookName, id: bookID)
+        createBookPresenter.createBook(entity: bookPresentationEntity)
+    }
+    
+    
+    // MARK: Create Book Protocol
+    func bookCreationSuccess(viewEntity: BookPresentationEntity) {
+        print("Success while creating new book")
+        showSuccessAlert()
+    }
+    
+    func bookCreationFailure(errorString: String) {
+        print("Error while creating new book \(errorString)")
+        showErrorAlert(errorMessage: errorString)
         
-        createBookPresenter.createBook(entity: bookPresentationEntity) { [weak self] (isBookCreated, error) in
-            self?.showAlert(error: error)
-        }
     }
     
     // MARK: Show Alert
-    func showAlert(error: Error?) {
-        var title = "Success"
-        var message = "Successfully created new book"
-        if error != nil {
-            title = "Error"
-            message = "Error While creating new book"
+    func showErrorAlert(errorMessage: String) {
+        showAlert(title: "Error", message: errorMessage)
+    }
+    
+    func showSuccessAlert() {
+        let alert = UIAlertController(title: "Success", message: "Successfully created new book", preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "OK",
+                                     style: .default)
+        {   [weak self] (action) in
+            //TODO : Call on Main Thread
+            self?.navigationController?.popViewController(animated: true)
         }
         
+        alert.addAction(okAction)
+        //TODO : Call on Main Thread
+        self.present(alert, animated: true, completion: nil)
+    }
+    
+    
+    func showAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let okAction = UIAlertAction(title: "OK",
                                      style: .default)
