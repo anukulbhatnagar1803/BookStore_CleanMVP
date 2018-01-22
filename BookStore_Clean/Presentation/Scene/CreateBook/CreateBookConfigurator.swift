@@ -12,8 +12,8 @@ import Foundation
 class CreateBookConfigurator<T: CreateBookViewController> {
     
     static func configure(controller: T) {
-        let bookService = BookService(service: DBService.shared)
-        let createBookRepository = BookRepository(service: bookService)
+        //let bookService = BookService(service: DBService.shared)
+        let createBookRepository = BookRepository(service: DBService.shared)
         let createBookUseCase = CreateBookUseCase(bookRepo: createBookRepository)
         let createBookPresenter = CreateBookPresenter(controller, createBookUseCase)
         controller.createBookPresenter = createBookPresenter

@@ -11,8 +11,8 @@ import Foundation
 class BookListConfigurator<T: BookListViewController> {
     
     func configure(controller: T) {
-        let bookService = BookService(service: DBService.shared)
-        let bookRepository = BookRepository(service: bookService)
+        //let bookService = BookService(service: DBService.shared)
+        let bookRepository = BookRepository(service: DBService.shared)
         let fetchBookListUseCase = FetchBookListUseCase(bookRepo: bookRepository)
         let bookListpresenter = BookListPresenter.init(controller, fetchBookListUseCase)
         controller.bookListPresenter = bookListpresenter

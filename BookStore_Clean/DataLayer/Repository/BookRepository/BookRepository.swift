@@ -6,7 +6,9 @@
 //  Copyright © 2018 Admin. All rights reserved.
 //
 
+
 import Foundation
+import CoreData
 
 protocol BookRepositoryProtocol {
     func fetchCompleteBookList() -> [BookDomainEntity]
@@ -17,16 +19,27 @@ protocol BookRepositoryProtocol {
 }
 
 
-struct BookRepository: BookRepositoryProtocol {
+class BookRepository: NSObject, BookRepositoryProtocol, NSFetchedResultsControllerDelegate {
     
-    private let bookService: BookServiceProtocol
-    
-    init(service: BookServiceProtocol) {
-        self.bookService = service
+    private let dbService: DBService
+    init(service: DBService) {
+        self.dbService = service
     }
     
+    private lazy var bookFetchResultController: NSFetchedResultsController<Book> = {
+        let sortDescriptor = NSSortDescriptor(key: "bookName", ascending: true)
+        let fetchResultController = dbService.createFetchResultController(entity: Book.self,
+                                                                          predicate: nil,
+                                                                          delegate: self,
+                                                                          sortDescriptors: [sortDescriptor],
+                                                                          onContext: dbService.mainContext)
+        return fetchResultController
+    }()
+    
+    
     func fetchCompleteBookList() -> [BookDomainEntity] {
-        let bookList = bookService.fetchCompleteBookList()
+        let bookList = dbService.fetchEntities(entity: Book.self,
+                                               onContext: dbService.mainContext)
         var bookDomainList: [BookDomainEntity] = []
         bookList.forEach { (bookModel) in
             bookDomainList.append(BookDomainEntity(name: bookModel.bookName ?? "NA",
@@ -36,31 +49,50 @@ struct BookRepository: BookRepositoryProtocol {
     }
     
     func createBook(entity: BookDomainEntity, completion: @escaping (Bool, Error?) -> Void) {
-        bookService.createBook(bookName: entity.name,
-                               bookID: entity.id)
-        {   (isBookCreated, error) in
-            completion(isBookCreated, error)
+        
+        let predicate = NSPredicate(format: "bookID == %@", entity.id)
+        let bookArray = dbService.fetchEntities(entity: Book.self,
+                                                onContext: dbService.mainContext,
+                                                predicate: predicate)
+        
+        guard bookArray.count == 0 else {
+            completion(false, NSError())
+            return
+        }
+        
+        let book = dbService.createEntity(entity: Book.self,
+                                          onContext: dbService.mainContext)
+        book?.bookName = entity.name
+        book?.bookID = entity.id
+        
+        do {
+            try dbService.mainContext.save()
+            completion(true, nil)
+        } catch {
+            completion(false, error)
         }
     }
     
-    func createBook(entity: BookDomainEntity) {
-        
-    }
     
     func fetchBook(at indexPath: IndexPath) -> BookDomainEntity {
-        let bookModelEntity = bookService.fetchBook(at: indexPath)
-        //TODO: Need to fix the same
-        return BookDomainEntity(name: bookModelEntity.bookName ?? "",
-                                id: bookModelEntity.bookID ?? "")
-        
+        let object = bookFetchResultController.object(at: indexPath)
+        return BookDomainEntity(name: object.bookName ?? "",
+                                id: object.bookID ?? "")
     }
     
     func initializeBookList() {
-        bookService.initializeBookList()
+        do {
+            try self.bookFetchResultController.performFetch()
+        } catch {
+            print("Error while initializing Book List")
+        }
     }
     
     func bookListCount() -> Int {
-        return bookService.bookListCount()
+        if self.bookFetchResultController.fetchedObjects == nil {
+            initializeBookList()
+        }
+        return self.bookFetchResultController.fetchedObjects?.count ?? 0
     }
     
 }
