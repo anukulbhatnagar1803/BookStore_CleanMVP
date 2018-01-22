@@ -112,7 +112,11 @@ extension BookRepository: NSFetchedResultsControllerDelegate {
         
         switch type {
         case .insert:
+            //NotificationCenter.default.post(Notification(name: Notification.Name(rawValue: "BookListRefreshed")))
+            
             print("Insert")
+            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "BookListRefreshed"),
+                                            object: newIndexPath)
             break
         case .delete:
             print("Delete")

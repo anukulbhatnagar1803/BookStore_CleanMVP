@@ -15,12 +15,27 @@ protocol FetchBookUseCaseProtocol {
     func bookListCount() -> Int
 }
 
-struct FetchBookListUseCase: FetchBookUseCaseProtocol {
+class FetchBookListUseCase: FetchBookUseCaseProtocol {
     
     private var bookRepository: BookRepositoryProtocol
     
     init(bookRepo: BookRepositoryProtocol) {
         self.bookRepository = bookRepo
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(newBookAddedCallBack(notification:)),
+                                               name: NSNotification.Name(rawValue: "BookListRefreshed"),
+                                               object: nil)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func newBookAddedCallBack(notification: NSNotification) {
+        if let indexPath = notification.object as? IndexPath {
+            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "InsertNewBook"),
+                                            object: indexPath)
+        }
     }
     
     func fetchBookList() -> [BookPresentationEntity] {

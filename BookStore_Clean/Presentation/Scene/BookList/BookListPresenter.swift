@@ -24,6 +24,11 @@ class BookListPresenter: BookListPresenterProtocol {
          _ fetchBookListUseCase: FetchBookUseCaseProtocol) {
         self.viewController = viewController
         self.fetchBookListUseCase = fetchBookListUseCase
+        
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(newBookAddedCallBack(notification:)),
+                                               name: NSNotification.Name(rawValue: "InsertNewBook"),
+                                               object: nil)
     }
     
     func fetchCompleteBookList() {
@@ -41,5 +46,12 @@ class BookListPresenter: BookListPresenterProtocol {
     
     func bookListCount() -> Int {
         return fetchBookListUseCase.bookListCount()
+    }
+    
+    @objc func newBookAddedCallBack(notification: NSNotification) {
+    
+        if let indexPath = notification.object as? IndexPath {
+            viewController.insertRow(indexPath: indexPath)
+        }
     }
 }

@@ -37,7 +37,7 @@ class BookListViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         //TODO: Need to remove this
-        bookListTableView.reloadData()
+        //bookListTableView.reloadData()
     }
 }
 
@@ -70,7 +70,9 @@ extension BookListViewController: UITableViewDataSource, UITableViewDelegate, Bo
     }
     
     func insertRow(indexPath: IndexPath) {
+        beginUpdate()
         bookListTableView.insertRows(at: [indexPath], with: .fade)
+        endUpdate()
     }
     
     func deleteRow(indexPath: IndexPath) {
