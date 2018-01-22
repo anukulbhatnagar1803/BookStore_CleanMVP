@@ -19,7 +19,7 @@ protocol BookRepositoryProtocol {
 }
 
 
-class BookRepository: NSObject, BookRepositoryProtocol, NSFetchedResultsControllerDelegate {
+class BookRepository: NSObject, BookRepositoryProtocol {
     
     private let dbService: DBService
     init(service: DBService) {
@@ -96,3 +96,39 @@ class BookRepository: NSObject, BookRepositoryProtocol, NSFetchedResultsControll
     }
     
 }
+
+extension BookRepository: NSFetchedResultsControllerDelegate {
+    
+    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        
+    }
+    
+    
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>,
+                    didChange anObject: Any,
+                    at indexPath: IndexPath?,
+                    for type: NSFetchedResultsChangeType,
+                    newIndexPath: IndexPath?) {
+        
+        switch type {
+        case .insert:
+            print("Insert")
+            break
+        case .delete:
+            print("Delete")
+            break
+        case .update:
+            print("Update")
+            break
+        case .move:
+            print("Move")
+            break
+        }
+    }
+    
+    
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        
+    }
+}
+
